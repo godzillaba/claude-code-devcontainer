@@ -38,6 +38,16 @@ alias la='ls -A --color=auto'
 alias l='ls -CF --color=auto'
 alias grep='grep --color=auto'
 
+install-plugins() {
+  claude plugin install scv-scan@skills-curated && \
+  claude plugin install building-secure-contracts@trailofbits && \
+  claude plugin install entry-point-analyzer@trailofbits && \
+  claude plugin install property-based-testing@trailofbits && \
+  claude plugin install mutest@godzillaba-plugins
+}
+
+bindkey '^H' backward-kill-word
+
 # fzf configuration - use fd for faster file finding
 export FZF_DEFAULT_COMMAND='fdfind --type f --hidden --follow --exclude .git'
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
