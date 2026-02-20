@@ -21,7 +21,13 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "anthropic.claude-code"
+        "anthropic.claude-code",
+        "eamodio.gitlens",
+        "golang.go",
+        "nomicfoundation.hardhat-solidity",
+        "tintinweb.solidity-metrics",
+        "tintinweb.solidity-visual-auditor",
+        "tintinweb.vscode-solidity-language"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "zsh",
