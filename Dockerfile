@@ -110,6 +110,11 @@ USER root
 ARG GO_VERSION=1.26.0
 RUN ARCH=$(dpkg --print-architecture) && \
   curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-${ARCH}.tar.gz" | tar -xz -C /usr/local
+
+# Install Solidity compiler (solc)
+ARG SOLC_VERSION=0.8.34
+RUN curl -fsSL "https://github.com/ethereum/solidity/releases/download/v${SOLC_VERSION}/solc-static-linux" -o /usr/local/bin/solc && \
+  chmod +x /usr/local/bin/solc
 USER vscode
 
 # Add to PATH
