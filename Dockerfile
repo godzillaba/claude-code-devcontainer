@@ -77,7 +77,8 @@ ENV PATH="/home/vscode/.local/bin:$PATH"
 RUN curl -fsSL https://claude.ai/install.sh | bash && \
   claude plugin marketplace add anthropics/skills && \
   claude plugin marketplace add trailofbits/skills && \
-  claude plugin marketplace add trailofbits/skills-curated
+  claude plugin marketplace add trailofbits/skills-curated && \
+  claude plugin marketplace add godzillaba/my-plugins
 
 # Install Python 3.13 via uv (fast binary download, not source compilation)
 RUN uv python install 3.13 --default
@@ -115,6 +116,11 @@ RUN ARCH=$(dpkg --print-architecture) && \
 ARG SOLC_VERSION=0.8.34
 RUN curl -fsSL "https://github.com/ethereum/solidity/releases/download/v${SOLC_VERSION}/solc-static-linux" -o /usr/local/bin/solc && \
   chmod +x /usr/local/bin/solc
+
+# Install Certora Gambit (Solidity mutation testing)
+ARG GAMBIT_VERSION=1.0.6
+RUN curl -fsSL "https://github.com/Certora/gambit/releases/download/v${GAMBIT_VERSION}/gambit-linux-v${GAMBIT_VERSION}" -o /usr/local/bin/gambit && \
+  chmod +x /usr/local/bin/gambit
 USER vscode
 
 # Add to PATH
