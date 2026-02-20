@@ -95,8 +95,7 @@ RUN curl -fsSL https://fnm.vercel.app/install | bash -s -- --install-dir "$FNM_D
   fnm default ${NODE_VERSION}
 
 # Install Foundry (forge, cast, anvil, chisel)
-RUN curl -fsSL https://foundry.paradigm.xyz | bash && \
-  /home/vscode/.foundry/bin/foundryup
+RUN curl -L https://foundry.paradigm.xyz | bash && foundryup
 
 # Install Oh My Zsh
 ARG ZSH_IN_DOCKER_VERSION=1.2.1
