@@ -71,7 +71,7 @@ WORKDIR /workspace
 USER vscode
 
 # Set PATH early so claude and other user-installed binaries are available
-ENV PATH="/home/vscode/.foundry/bin:/home/vscode/.local/bin:$PATH"
+ENV PATH="/home/vscode/.local/bin:$PATH"
 
 # Install Claude Code natively with marketplace plugins
 RUN curl -fsSL https://claude.ai/install.sh | bash && \
@@ -94,14 +94,27 @@ RUN curl -fsSL https://fnm.vercel.app/install | bash -s -- --install-dir "$FNM_D
   fnm install ${NODE_VERSION} && \
   fnm default ${NODE_VERSION}
 
-# Install Foundry (forge, cast, anvil, chisel)
-RUN curl -L https://foundry.paradigm.xyz | bash && foundryup
-
 # Install Oh My Zsh
 ARG ZSH_IN_DOCKER_VERSION=1.2.1
 RUN sh -c "$(curl -fsSL https://github.com/deluan/zsh-in-docker/releases/download/v${ZSH_IN_DOCKER_VERSION}/zsh-in-docker.sh)" -- \
   -p git \
   -x
+
+
+# Install Foundry (forge, cast, anvil, chisel)
+ENV PATH="/home/vscode/.foundry/bin:$PATH"
+RUN curl -L https://foundry.paradigm.xyz | bash && foundryup
+
+# Install Go (needs root for /usr/local)
+USER root
+ARG GO_VERSION=1.26.0
+RUN ARCH=$(dpkg --print-architecture) && \
+  curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-${ARCH}.tar.gz" | tar -xz -C /usr/local
+USER vscode
+
+# Add to PATH
+ENV GOPATH="/home/vscode/go"
+ENV PATH="/home/vscode/go/bin:/usr/local/go/bin:$PATH"
 
 # Copy zsh configuration
 COPY --chown=vscode:vscode .zshrc /home/vscode/.zshrc.custom
