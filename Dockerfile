@@ -71,7 +71,7 @@ WORKDIR /workspace
 USER vscode
 
 # Set PATH early so claude and other user-installed binaries are available
-ENV PATH="/home/vscode/.local/bin:$PATH"
+ENV PATH="/home/vscode/.foundry/bin:/home/vscode/.local/bin:$PATH"
 
 # Install Claude Code natively with marketplace plugins
 RUN curl -fsSL https://claude.ai/install.sh | bash && \
@@ -93,6 +93,10 @@ RUN curl -fsSL https://fnm.vercel.app/install | bash -s -- --install-dir "$FNM_D
   eval "$(fnm env)" && \
   fnm install ${NODE_VERSION} && \
   fnm default ${NODE_VERSION}
+
+# Install Foundry (forge, cast, anvil, chisel)
+RUN curl -fsSL https://foundry.paradigm.xyz | bash && \
+  /home/vscode/.foundry/bin/foundryup
 
 # Install Oh My Zsh
 ARG ZSH_IN_DOCKER_VERSION=1.2.1
