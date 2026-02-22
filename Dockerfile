@@ -62,6 +62,7 @@ RUN mkdir -p /commandhistory /workspace /home/vscode/.claude /opt && \
 # Set environment variables
 ENV DEVCONTAINER=true
 ENV SHELL=/bin/zsh
+ENV TERM=xterm-256color
 ENV EDITOR=nano
 ENV VISUAL=nano
 
