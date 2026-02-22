@@ -134,5 +134,6 @@ COPY --chown=vscode:vscode .zshrc /home/vscode/.zshrc.custom
 # Append custom zshrc to the main one
 RUN echo 'source ~/.zshrc.custom' >> /home/vscode/.zshrc
 
-# Copy post_install script
+# Copy post_install script and user-level CLAUDE.md
 COPY --chown=vscode:vscode post_install.py /opt/post_install.py
+COPY --chown=vscode:vscode CLAUDE-user.md /opt/CLAUDE-user.md

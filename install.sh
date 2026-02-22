@@ -205,6 +205,7 @@ cmd_template() {
   cp "$SCRIPT_DIR/devcontainer.json" "$devcontainer_dir/"
   cp "$SCRIPT_DIR/post_install.py" "$devcontainer_dir/"
   cp "$SCRIPT_DIR/.zshrc" "$devcontainer_dir/"
+  cp "$SCRIPT_DIR/CLAUDE-user.md" "$devcontainer_dir/"
 
   # Restore preserved mounts
   if [[ -n "$preserved_mounts" ]]; then

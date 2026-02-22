@@ -204,6 +204,16 @@ node_modules/
     print(f"[post_install] Local git config created: {local_gitconfig}", file=sys.stderr)
 
 
+def install_user_claude_md():
+    """Copy CLAUDE-user.md into the user-level Claude config directory."""
+    src = Path("/opt/CLAUDE-user.md")
+    dst = Path.home() / ".claude" / "CLAUDE.md"
+    if src.exists():
+        import shutil
+        shutil.copy2(src, dst)
+        print(f"[post_install] User CLAUDE.md installed: {dst}", file=sys.stderr)
+
+
 def main():
     """Run all post-install configuration."""
     print("[post_install] Starting post-install configuration...", file=sys.stderr)
@@ -212,6 +222,7 @@ def main():
     setup_tmux_config()
     fix_directory_ownership()
     setup_global_gitignore()
+    install_user_claude_md()
 
     print("[post_install] Configuration complete!", file=sys.stderr)
 
