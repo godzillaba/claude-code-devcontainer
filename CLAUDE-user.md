@@ -3,6 +3,7 @@
 ## Git
 
 Always commit with `--no-gpg-sign` — GPG signing is not configured in this container.
+Never commit unless the user explicitly asks you to.
 
 ## Tooling Philosophy
 
