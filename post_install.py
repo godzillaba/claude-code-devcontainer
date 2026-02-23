@@ -33,6 +33,23 @@ def setup_claude_settings():
         settings["permissions"] = {}
     settings["permissions"]["defaultMode"] = "bypassPermissions"
 
+    # Set up ntfy notification hooks if NTFY_TOPIC is set
+    topic = os.environ.get("NTFY_TOPIC")
+    if topic:
+        notify_cmd = (
+            f'jq -r \'{{"topic":"{topic}","title":.title,"message":.message,"tags":["robot"]}}\''
+            " | curl -sf -X POST -H 'Content-Type: application/json' -d @- https://ntfy.sh"
+        )
+        settings["hooks"] = {
+            "Notification": [
+                {
+                    "matcher": "",
+                    "hooks": [{"type": "command", "command": notify_cmd, "async": True}],
+                }
+            ],
+        }
+        print(f"[post_install] ntfy hooks configured (topic: {topic[:4]}...)", file=sys.stderr)
+
     settings_file.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
     print(f"[post_install] Claude settings configured: {settings_file}", file=sys.stderr)
 
