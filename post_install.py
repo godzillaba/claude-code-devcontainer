@@ -231,6 +231,32 @@ def install_user_claude_md():
         print(f"[post_install] User CLAUDE.md installed: {dst}", file=sys.stderr)
 
 
+def install_claude_plugins():
+    """Install Claude Code plugins (skills)."""
+    plugins = [
+        "scv-scan@skills-curated",
+        "building-secure-contracts@trailofbits",
+        "entry-point-analyzer@trailofbits",
+        "property-based-testing@trailofbits",
+        "mutest@godzillaba-plugins",
+        "ast-grep",
+    ]
+    for plugin in plugins:
+        try:
+            subprocess.run(
+                ["claude", "plugin", "install", plugin],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            print(f"[post_install] Installed plugin: {plugin}", file=sys.stderr)
+        except subprocess.CalledProcessError as e:
+            print(f"[post_install] Warning: Failed to install {plugin}: {e.stderr.strip()}", file=sys.stderr)
+        except FileNotFoundError:
+            print("[post_install] Warning: 'claude' CLI not found, skipping plugin install", file=sys.stderr)
+            break
+
+
 def main():
     """Run all post-install configuration."""
     print("[post_install] Starting post-install configuration...", file=sys.stderr)
@@ -240,6 +266,7 @@ def main():
     fix_directory_ownership()
     setup_global_gitignore()
     install_user_claude_md()
+    install_claude_plugins()
 
     print("[post_install] Configuration complete!", file=sys.stderr)
 
