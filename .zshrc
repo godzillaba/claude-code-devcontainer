@@ -43,7 +43,8 @@ install-plugins() {
   claude plugin install building-secure-contracts@trailofbits && \
   claude plugin install entry-point-analyzer@trailofbits && \
   claude plugin install property-based-testing@trailofbits && \
-  claude plugin install mutest@godzillaba-plugins
+  claude plugin install mutest@godzillaba-plugins && \
+  claude plugin install ast-grep
 }
 
 bindkey '^H' backward-kill-word
