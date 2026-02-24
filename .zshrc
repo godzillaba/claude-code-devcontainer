@@ -30,12 +30,13 @@ setopt COMPLETE_IN_WORD        # Complete from both ends of word
 setopt ALWAYS_TO_END           # Move cursor to end after completion
 
 # Aliases
+alias gd2='DELTA_FEATURES=side-by-side git diff'
 alias fd=fdfind
 alias sg=ast-grep
 alias claude-yolo='claude --dangerously-skip-permissions'
 alias ll='ls -lah --color=auto'
+alias l='ll'
 alias la='ls -A --color=auto'
-alias l='ls -CF --color=auto'
 alias grep='grep --color=auto'
 
 bindkey '^H' backward-kill-word
