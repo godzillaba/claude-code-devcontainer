@@ -36,10 +36,7 @@ def setup_claude_settings():
     # Set up ntfy notification hooks if NTFY_TOPIC is set
     topic = os.environ.get("NTFY_TOPIC")
     if topic:
-        notify_cmd = (
-            f'jq -r \'{{"topic":"{topic}","title":.title,"message":.message,"tags":["robot"]}}\''
-            " | curl -sf -X POST -H 'Content-Type: application/json' -d @- https://ntfy.sh"
-        )
+        notify_cmd = (f"curl -d \"Claude is waiting\" https://ntfy.sh/{topic}")
         settings["hooks"] = {
             "Notification": [
                 {
