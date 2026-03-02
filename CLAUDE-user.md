@@ -9,6 +9,8 @@ Never commit unless the user explicitly asks you to.
 
 Always use the right tool for the job — install real libraries instead of reimplementing things with stdlib. If a dependency is missing and can't be installed due to the container/firewall setup, ask the user to help unblock it (e.g. add a domain to the firewall, add a package to the Dockerfile, rebuild the container). Don't silently work around missing tools with inferior hand-rolled alternatives.
 
+Use `uv` for all Python packaging. `uv tool install <pkg>` for CLI tools, `uv add <pkg>` for project dependencies, `uv run --with <pkg>` for ad-hoc usage. Never use `pip install` directly.
+
 ## Documentation
 
 When adding or modifying a feature, always update the relevant documentation if it exists. Keep docs in sync with code.

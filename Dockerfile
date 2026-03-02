@@ -11,6 +11,8 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Install additional system packages (base image already includes git, curl, sudo, etc.)
 RUN apt-get update && apt-get install -y --no-install-recommends \
+  libreoffice-writer \
+  texlive-latex-base \
   # Sandboxing support for Claude Code
   bubblewrap \
   socat \
