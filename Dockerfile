@@ -11,6 +11,8 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Install additional system packages (base image already includes git, curl, sudo, etc.)
 RUN apt-get update && apt-get install -y --no-install-recommends \
+  # headless browser stuff
+  libxcomposite1 libxcursor1 libxdamage1 libxfixes3 libgtk-3-0t64 libpangocairo-1.0-0 libpango-1.0-0 libatk1.0-0t64 libcairo-gobject2 libgdk-pixbuf-2.0-0 libasound2t64 \
   libreoffice-writer \
   texlive-latex-base \
   # Sandboxing support for Claude Code
