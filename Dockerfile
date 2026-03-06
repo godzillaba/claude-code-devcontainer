@@ -94,7 +94,8 @@ RUN curl -fsSL https://fnm.vercel.app/install | bash -s -- --install-dir "$FNM_D
   export PATH="$FNM_DIR:$PATH" && \
   eval "$(fnm env)" && \
   fnm install ${NODE_VERSION} && \
-  fnm default ${NODE_VERSION}
+  fnm default ${NODE_VERSION} && \
+  corepack enable
 
 # Install Oh My Zsh
 ARG ZSH_IN_DOCKER_VERSION=1.2.1
