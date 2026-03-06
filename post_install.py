@@ -244,7 +244,43 @@ def install_pashov_skills():
 
 
 def install_claude_plugins():
-    """Install Claude Code plugins (skills)."""
+    """Install Claude Code plugin marketplaces and plugins.
+
+    Removes existing plugins first so they get updated on each container build.
+    The ~/.claude dir persists across rebuilds, so without removal the install
+    is a no-op even when upstream plugins have new versions.
+
+    Marketplaces are registered here (not in the Dockerfile) because the
+    persistent volume for ~/.claude overlays the image layer at runtime.
+    """
+    plugins_dir = Path.home() / ".claude" / "plugins"
+    if plugins_dir.exists():
+        import shutil
+        shutil.rmtree(plugins_dir)
+        print("[post_install] Removed existing plugins for fresh install", file=sys.stderr)
+
+    marketplaces = [
+        "anthropics/skills",
+        "trailofbits/skills",
+        "trailofbits/skills-curated",
+        "godzillaba/my-plugins",
+        "ast-grep/agent-skill",
+    ]
+    for marketplace in marketplaces:
+        try:
+            subprocess.run(
+                ["claude", "plugin", "marketplace", "add", marketplace],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            print(f"[post_install] Added marketplace: {marketplace}", file=sys.stderr)
+        except subprocess.CalledProcessError as e:
+            print(f"[post_install] Warning: Failed to add marketplace {marketplace}: {e.stderr.strip()}", file=sys.stderr)
+        except FileNotFoundError:
+            print("[post_install] Warning: 'claude' CLI not found, skipping marketplace/plugin install", file=sys.stderr)
+            return
+
     plugins = [
         "scv-scan@skills-curated",
         "building-secure-contracts@trailofbits",
