@@ -228,6 +228,21 @@ def install_user_claude_md():
         print(f"[post_install] User CLAUDE.md installed: {dst}", file=sys.stderr)
 
 
+def install_pashov_skills():
+    """Install pashov/skills as Claude Code slash commands."""
+    src = Path("/opt/pashov-skills")
+    dst = Path.home() / ".claude" / "commands"
+    if not src.exists():
+        print("[post_install] Warning: pashov-skills not found, skipping", file=sys.stderr)
+        return
+    dst.mkdir(parents=True, exist_ok=True)
+    import shutil
+    skill = src / "solidity-auditor"
+    if skill.is_dir():
+        shutil.copytree(skill, dst / "solidity-auditor", dirs_exist_ok=True)
+        print("[post_install] Installed pashov skill: /solidity-auditor", file=sys.stderr)
+
+
 def install_claude_plugins():
     """Install Claude Code plugins (skills)."""
     plugins = [
@@ -263,6 +278,7 @@ def main():
     fix_directory_ownership()
     setup_global_gitignore()
     install_user_claude_md()
+    install_pashov_skills()
     install_claude_plugins()
 
     print("[post_install] Configuration complete!", file=sys.stderr)

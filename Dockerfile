@@ -139,6 +139,9 @@ COPY --chown=vscode:vscode .zshrc /home/vscode/.zshrc.custom
 # Append custom zshrc to the main one
 RUN echo 'source ~/.zshrc.custom' >> /home/vscode/.zshrc
 
+# Clone pashov/skills (custom Claude Code slash commands)
+RUN git clone https://github.com/pashov/skills.git /opt/pashov-skills
+
 # Copy post_install script and user-level CLAUDE.md
 COPY --chown=vscode:vscode post_install.py /opt/post_install.py
 COPY --chown=vscode:vscode CLAUDE-user.md /opt/CLAUDE-user.md
