@@ -18,7 +18,7 @@ else
 fi
 [ -z "$added" ] && exit 0
 
-matches=$(echo "$added" | grep -E '\b0x[0-9a-fA-F]{8}\b' | grep -viE 'address|chainId|block|offset|mask|flag|0x0{8}' || true)
+matches=$(echo "$added" | grep -E '\b0x[0-9a-fA-F]{8}\b' || true)
 
 if [ -n "$matches" ]; then
   echo "WARNING: Possible hardcoded 4-byte selector(s) in new code. Compute selectors at runtime instead."
