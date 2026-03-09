@@ -141,3 +141,4 @@ RUN git clone https://github.com/pashov/skills.git /opt/pashov-skills
 # Copy post_install script and user-level CLAUDE.md
 COPY --chown=vscode:vscode post_install.py /opt/post_install.py
 COPY --chown=vscode:vscode CLAUDE-user.md /opt/CLAUDE-user.md
+COPY --chown=vscode:vscode hooks/ /opt/hooks/

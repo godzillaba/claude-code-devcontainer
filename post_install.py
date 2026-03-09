@@ -33,19 +33,31 @@ def setup_claude_settings():
         settings["permissions"] = {}
     settings["permissions"]["defaultMode"] = "bypassPermissions"
 
-    # Set up ntfy notification hooks if NTFY_TOPIC is set
+    # Set up hooks
+    hooks = {}
+
+    hooks["PostToolUse"] = [
+        {
+            "matcher": "Write|Edit",
+            "hooks": [
+                {"type": "command", "command": "bash ~/.claude/hooks/check-hardcoded-selectors.bash"},
+            ],
+        },
+    ]
+
+    # Add ntfy notification hook if NTFY_TOPIC is set
     topic = os.environ.get("NTFY_TOPIC")
     if topic:
-        notify_cmd = (f"curl -d \"Claude is waiting\" https://ntfy.sh/{topic}")
-        settings["hooks"] = {
-            "Notification": [
-                {
-                    "matcher": "",
-                    "hooks": [{"type": "command", "command": notify_cmd, "async": True}],
-                }
-            ],
-        }
+        notify_cmd = f"curl -d \"Claude is waiting\" https://ntfy.sh/{topic}"
+        hooks["Notification"] = [
+            {
+                "matcher": "",
+                "hooks": [{"type": "command", "command": notify_cmd, "async": True}],
+            }
+        ]
         print(f"[post_install] ntfy hooks configured (topic: {topic[:4]}...)", file=sys.stderr)
+
+    settings["hooks"] = hooks
 
     settings_file.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
     print(f"[post_install] Claude settings configured: {settings_file}", file=sys.stderr)
@@ -243,6 +255,25 @@ def install_pashov_skills():
         print("[post_install] Installed pashov skill: /solidity-auditor", file=sys.stderr)
 
 
+def install_hooks():
+    """Copy hook scripts into the Claude hooks directory."""
+    src = Path("/opt/hooks")
+    dst = Path.home() / ".claude" / "hooks"
+    if not src.exists() or not any(src.iterdir()):
+        return
+    import shutil
+    if dst.exists():
+        shutil.rmtree(dst)
+    shutil.copytree(src, dst)
+    # Remove .gitkeep if present, chmod +x the rest
+    for f in dst.iterdir():
+        if f.name == ".gitkeep":
+            f.unlink()
+        elif f.is_file():
+            f.chmod(f.stat().st_mode | 0o755)
+    print(f"[post_install] Hooks installed: {dst}", file=sys.stderr)
+
+
 def install_claude_plugins():
     """Install Claude Code plugin marketplaces and plugins.
 
@@ -315,6 +346,7 @@ def main():
     setup_global_gitignore()
     install_user_claude_md()
     install_pashov_skills()
+    install_hooks()
     install_claude_plugins()
 
     print("[post_install] Configuration complete!", file=sys.stderr)
