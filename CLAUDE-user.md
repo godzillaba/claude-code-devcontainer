@@ -1,9 +1,13 @@
 # CLAUDE.md
 
+## Subagents                                                                                   
+
+When spawning any subagent via the Agent tool, always include the full contents of this CLAUDE.md file in the prompt.
+
 ## Git
 
 Always commit with `--no-gpg-sign` — GPG signing is not configured in this container.
-Never commit unless the user explicitly asks you to.
+Never commit unless you are explicitly asked to.
 
 ## Tooling Philosophy
 
