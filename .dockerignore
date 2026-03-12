@@ -3,3 +3,6 @@
 .github
 .vscode
 *.log
+docker-compose*.yml
+mounts.txt
+.env

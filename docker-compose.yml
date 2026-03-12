@@ -1,0 +1,39 @@
+services:
+  sandbox:
+    build:
+      context: .
+      args:
+        TZ: ${TZ:-UTC}
+    init: true
+    security_opt:
+      - apparmor=unconfined
+      - seccomp=unconfined
+    volumes:
+      - ${WORKSPACE_DIR:-.}:/workspace:delegated
+      - bash-history:/commandhistory
+      - claude-config:/home/vscode/.claude
+      - gh-config:/home/vscode/.config/gh
+      - ${HOME}/.gitconfig:/home/vscode/.gitconfig:ro
+    environment:
+      COLORTERM: truecolor
+      NODE_OPTIONS: --max-old-space-size=4096
+      CLAUDE_CONFIG_DIR: /home/vscode/.claude
+      POWERLEVEL9K_DISABLE_GITSTATUS: "true"
+      GIT_CONFIG_GLOBAL: /home/vscode/.gitconfig.local
+      UV_LINK_MODE: copy
+      NPM_CONFIG_IGNORE_SCRIPTS: "true"
+      NPM_CONFIG_AUDIT: "true"
+      NPM_CONFIG_FUND: "false"
+      NPM_CONFIG_SAVE_EXACT: "true"
+      NPM_CONFIG_UPDATE_NOTIFIER: "false"
+      NPM_CONFIG_MINIMUM_RELEASE_AGE: "1440"
+      PYTHONDONTWRITEBYTECODE: "1"
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+      NTFY_TOPIC: ${NTFY_TOPIC:-}
+    stdin_open: true
+    tty: true
+
+volumes:
+  bash-history:
+  claude-config:
+  gh-config:

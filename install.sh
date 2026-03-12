@@ -1,8 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-# Claude Code Devcontainer CLI Helper
-# Provides the `devc` command for managing devcontainers
+# Claude Code Docker Sandbox CLI Helper
+# Provides the `devc` command for managing sandbox containers
 
 # Resolve symlinks to get actual script location
 SOURCE="${BASH_SOURCE[0]}"
@@ -26,17 +26,17 @@ print_usage() {
 Usage: devc <command> [options]
 
 Commands:
-    .                   Install devcontainer template to current directory and start
-    up                  Start the devcontainer in current directory
-    rebuild             Rebuild the devcontainer (preserves auth volumes)
-    down                Stop the devcontainer
+    .                   Install sandbox template to current directory and start
+    up                  Start the sandbox container in current directory
+    rebuild             Rebuild the sandbox (preserves auth volumes)
+    down                Stop the sandbox container
     shell               Open a shell in the running container
     self-install        Install 'devc' command to ~/.local/bin
     update              Update devc to the latest version
-    template [dir]      Copy devcontainer template to directory (default: current)
+    template [dir]      Copy sandbox template to directory (default: current)
     exec <cmd>          Execute a command in the running container
     upgrade             Upgrade Claude Code to latest version
-    mount <host> <cont> Add a mount to the devcontainer (recreates container)
+    mount <host> <cont> Add a mount to the sandbox (recreates container)
     help                Show this help message
 
 Examples:
@@ -68,107 +68,85 @@ log_error() {
   echo -e "${RED}[devc]${NC} $1" >&2
 }
 
-check_devcontainer_cli() {
-  if ! command -v devcontainer &>/dev/null; then
-    log_error "devcontainer CLI not found."
-    log_info "Install it with: npm install -g @devcontainers/cli"
+check_docker_cli() {
+  if ! command -v docker &>/dev/null; then
+    log_error "docker not found."
+    log_info "Install Docker Desktop, OrbStack, or Colima"
     exit 1
   fi
-}
-
-check_no_sys_admin() {
-  local workspace="${1:-.}"
-  local dc_json="$workspace/.devcontainer/devcontainer.json"
-  [[ -f "$dc_json" ]] || return 0
-  if jq -e \
-    '.runArgs[]? | select(test("SYS_ADMIN"))' \
-    "$dc_json" >/dev/null 2>&1; then
-    log_error "SYS_ADMIN capability detected in runArgs."
-    log_error "This defeats the read-only .devcontainer mount."
+  if ! docker compose version &>/dev/null; then
+    log_error "docker compose not available."
+    log_info "Update Docker or install the compose plugin"
     exit 1
   fi
 }
 
 get_workspace_folder() {
-  echo "${1:-$(pwd)}"
+  local dir="${1:-$(pwd)}"
+  (cd "$dir" 2>/dev/null && pwd)
 }
 
-# Extract custom mounts from devcontainer.json to a temp file
-# Returns the temp file path, or empty string if no custom mounts
-#
-# Security: .devcontainer/ is mounted read-only inside the container to prevent
-# a compromised process from injecting malicious mounts or commands into
-# devcontainer.json that execute on the host during rebuild. This protection
-# requires that SYS_ADMIN is never added to runArgs (it would allow remounting
-# read-write).
-extract_mounts_to_file() {
-  local devcontainer_json="$1"
-  local temp_file
+get_project_name() {
+  local workspace="${1:-$(pwd)}"
+  local dirname
+  dirname="$(basename "$workspace")"
+  # Compose project names: lowercase alphanumeric, hyphens, underscores only
+  dirname="${dirname//[^a-zA-Z0-9_-]/-}"
+  dirname="${dirname,,}"
+  echo "claude-${dirname}"
+}
 
-  [[ -f "$devcontainer_json" ]] || return 0
+# Run docker compose with the right files, project name, and env vars
+compose_cmd() {
+  local workspace_folder="$1"
+  shift
+  local sandbox_dir="$workspace_folder/.claude-sandbox"
+  local override_file="$sandbox_dir/docker-compose.override.yml"
 
-  temp_file=$(mktemp)
+  local -a compose_args=(
+    -f "$sandbox_dir/docker-compose.yml"
+    -p "$(get_project_name "$workspace_folder")"
+  )
 
-  # Filter out default mounts by target path (immune to project name changes)
-  local custom_mounts
-  custom_mounts=$(jq -c '
-    .mounts // [] | map(
-      select(
-        (contains("target=/commandhistory,") | not) and
-        (contains("target=/home/vscode/.claude,") | not) and
-        (contains("target=/home/vscode/.config/gh,") | not) and
-        (contains("target=/home/vscode/.gitconfig,") | not) and
-        (contains("target=/workspace/.devcontainer,") | not)
-      )
-    ) | if length > 0 then . else empty end
-  ' "$devcontainer_json" 2>/dev/null) || true
+  [[ -f "$override_file" ]] && compose_args+=(-f "$override_file")
 
-  if [[ -n "$custom_mounts" ]]; then
-    echo "$custom_mounts" >"$temp_file"
-    echo "$temp_file"
-  else
-    rm -f "$temp_file"
+  WORKSPACE_DIR="$workspace_folder" docker compose "${compose_args[@]}" "$@"
+}
+
+# Generate docker-compose.override.yml from mounts.txt
+generate_override() {
+  local sandbox_dir="$1"
+  local mounts_file="$sandbox_dir/mounts.txt"
+  local override_file="$sandbox_dir/docker-compose.override.yml"
+
+  if [[ ! -f "$mounts_file" ]] || [[ ! -s "$mounts_file" ]]; then
+    rm -f "$override_file"
+    return
   fi
+
+  {
+    echo "services:"
+    echo "  sandbox:"
+    echo "    volumes:"
+    while IFS= read -r line || [[ -n "$line" ]]; do
+      [[ -z "$line" || "$line" == \#* ]] && continue
+      echo "      - ${line}"
+    done <"$mounts_file"
+  } >"$override_file"
 }
 
-# Merge preserved mounts back into devcontainer.json
-merge_mounts_from_file() {
-  local devcontainer_json="$1"
-  local mounts_file="$2"
+# Extract custom mounts from mounts.txt to a temp file for preservation
+extract_mounts_to_file() {
+  local sandbox_dir="$1"
+  local mounts_file="$sandbox_dir/mounts.txt"
 
   [[ -f "$mounts_file" ]] || return 0
   [[ -s "$mounts_file" ]] || return 0
 
-  local custom_mounts
-  custom_mounts=$(cat "$mounts_file")
-
-  local updated
-  updated=$(jq --argjson custom "$custom_mounts" '
-    .mounts = ((.mounts // []) + $custom | unique)
-  ' "$devcontainer_json")
-
-  echo "$updated" >"$devcontainer_json"
-}
-
-# Add or update a mount in devcontainer.json
-update_devcontainer_mounts() {
-  local devcontainer_json="$1"
-  local host_path="$2"
-  local container_path="$3"
-  local readonly="${4:-false}"
-
-  local mount_str="source=${host_path},target=${container_path},type=bind"
-  [[ "$readonly" == "true" ]] && mount_str="${mount_str},readonly"
-
-  local updated
-  updated=$(jq --arg target "$container_path" --arg mount "$mount_str" '
-    .mounts = (
-      ((.mounts // []) | map(select(contains("target=" + $target + ",") or endswith("target=" + $target) | not)))
-      + [$mount]
-    )
-  ' "$devcontainer_json")
-
-  echo "$updated" >"$devcontainer_json"
+  local temp_file
+  temp_file=$(mktemp)
+  cp "$mounts_file" "$temp_file"
+  echo "$temp_file"
 }
 
 cmd_template() {
@@ -178,12 +156,11 @@ cmd_template() {
     exit 1
   }
 
-  local devcontainer_dir="$target_dir/.devcontainer"
-  local devcontainer_json="$devcontainer_dir/devcontainer.json"
+  local sandbox_dir="$target_dir/.claude-sandbox"
   local preserved_mounts=""
 
-  if [[ -d "$devcontainer_dir" ]]; then
-    log_warn "Devcontainer already exists at $devcontainer_dir"
+  if [[ -d "$sandbox_dir" ]]; then
+    log_warn "Sandbox config already exists at $sandbox_dir"
     read -p "Overwrite? [y/N] " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -192,102 +169,102 @@ cmd_template() {
     fi
 
     # Preserve custom mounts before overwriting
-    preserved_mounts=$(extract_mounts_to_file "$devcontainer_json")
+    preserved_mounts=$(extract_mounts_to_file "$sandbox_dir")
     if [[ -n "$preserved_mounts" ]]; then
       log_info "Preserving custom mounts..."
     fi
   fi
 
-  mkdir -p "$devcontainer_dir"
+  mkdir -p "$sandbox_dir"
 
   # Copy template files
-  cp "$SCRIPT_DIR/Dockerfile" "$devcontainer_dir/"
-  cp "$SCRIPT_DIR/devcontainer.json" "$devcontainer_dir/"
-  cp "$SCRIPT_DIR/post_install.py" "$devcontainer_dir/"
-  cp "$SCRIPT_DIR/.zshrc" "$devcontainer_dir/"
-  cp "$SCRIPT_DIR/CLAUDE-user.md" "$devcontainer_dir/"
-  cp -r "$SCRIPT_DIR/hooks" "$devcontainer_dir/"
+  cp "$SCRIPT_DIR/Dockerfile" "$sandbox_dir/"
+  cp "$SCRIPT_DIR/docker-compose.yml" "$sandbox_dir/"
+  cp "$SCRIPT_DIR/entrypoint.sh" "$sandbox_dir/"
+  cp "$SCRIPT_DIR/post_install.py" "$sandbox_dir/"
+  cp "$SCRIPT_DIR/.zshrc" "$sandbox_dir/"
+  cp "$SCRIPT_DIR/CLAUDE-user.md" "$sandbox_dir/"
+  cp -r "$SCRIPT_DIR/hooks" "$sandbox_dir/"
 
   # Restore preserved mounts
   if [[ -n "$preserved_mounts" ]]; then
-    merge_mounts_from_file "$devcontainer_json" "$preserved_mounts"
+    cp "$preserved_mounts" "$sandbox_dir/mounts.txt"
     rm -f "$preserved_mounts"
+    generate_override "$sandbox_dir"
     log_info "Custom mounts restored"
   fi
 
-  log_success "Template installed to $devcontainer_dir"
+  log_success "Template installed to $sandbox_dir"
 }
 
 cmd_up() {
   local workspace_folder
   workspace_folder="$(get_workspace_folder "${1:-}")"
 
-  check_devcontainer_cli
-  check_no_sys_admin "$workspace_folder"
-  log_info "Starting devcontainer in $workspace_folder..."
+  check_docker_cli
 
-  devcontainer up --workspace-folder "$workspace_folder"
-  log_success "Devcontainer started"
+  # Ensure host .gitconfig exists (compose bind mount requires it)
+  test -f "$HOME/.gitconfig" || touch "$HOME/.gitconfig"
+
+  log_info "Starting sandbox in $workspace_folder..."
+
+  compose_cmd "$workspace_folder" up -d
+  log_success "Sandbox started"
 }
 
 cmd_rebuild() {
   local workspace_folder
   workspace_folder="$(get_workspace_folder "${1:-}")"
 
-  check_devcontainer_cli
-  check_no_sys_admin "$workspace_folder"
-  log_info "Rebuilding devcontainer in $workspace_folder..."
+  check_docker_cli
 
-  devcontainer up --workspace-folder "$workspace_folder" --remove-existing-container
-  log_success "Devcontainer rebuilt"
+  # Ensure host .gitconfig exists
+  test -f "$HOME/.gitconfig" || touch "$HOME/.gitconfig"
+
+  log_info "Rebuilding sandbox in $workspace_folder..."
+
+  compose_cmd "$workspace_folder" build
+  compose_cmd "$workspace_folder" up -d --force-recreate
+  log_success "Sandbox rebuilt"
 }
 
 cmd_down() {
   local workspace_folder
   workspace_folder="$(get_workspace_folder "${1:-}")"
 
-  check_devcontainer_cli
-  log_info "Stopping devcontainer..."
+  check_docker_cli
+  log_info "Stopping sandbox..."
 
-  # Get container ID and stop it
-  local label="devcontainer.local_folder=$workspace_folder"
-  local container_id
-  container_id=$(docker ps -q --filter "label=$label" 2>/dev/null || true)
-
-  if [[ -n "$container_id" ]]; then
-    docker stop "$container_id"
-    log_success "Devcontainer stopped"
-  else
-    log_warn "No running devcontainer found for $workspace_folder"
-  fi
+  compose_cmd "$workspace_folder" down
+  log_success "Sandbox stopped"
 }
 
 cmd_shell() {
   local workspace_folder
   workspace_folder="$(get_workspace_folder)"
 
-  check_devcontainer_cli
-  log_info "Opening shell in devcontainer..."
+  check_docker_cli
+  log_info "Opening shell in sandbox..."
 
-  devcontainer exec --workspace-folder "$workspace_folder" zsh
+  compose_cmd "$workspace_folder" exec sandbox zsh
 }
 
 cmd_exec() {
   local workspace_folder
   workspace_folder="$(get_workspace_folder)"
 
-  check_devcontainer_cli
-  devcontainer exec --workspace-folder "$workspace_folder" "$@"
+  check_docker_cli
+  compose_cmd "$workspace_folder" exec sandbox "$@"
 }
 
 cmd_upgrade() {
   local workspace_folder
   workspace_folder="$(get_workspace_folder)"
 
-  check_devcontainer_cli
+  check_docker_cli
   log_info "Upgrading Claude Code..."
 
-  devcontainer exec --workspace-folder "$workspace_folder" claude update
+  compose_cmd "$workspace_folder" exec sandbox claude update
 
   log_success "Claude Code upgraded"
 }
@@ -312,22 +289,37 @@ cmd_mount() {
 
   local workspace_folder
   workspace_folder="$(get_workspace_folder)"
-  local devcontainer_json="$workspace_folder/.devcontainer/devcontainer.json"
+  local sandbox_dir="$workspace_folder/.claude-sandbox"
+  local mounts_file="$sandbox_dir/mounts.txt"
 
-  if [[ ! -f "$devcontainer_json" ]]; then
-    log_error "No devcontainer.json found. Run 'devc template' first."
+  if [[ ! -f "$sandbox_dir/docker-compose.yml" ]]; then
+    log_error "No sandbox config found. Run 'devc template' first."
     exit 1
   fi
 
-  check_devcontainer_cli
+  check_docker_cli
 
-  log_info "Adding mount: $host_path → $container_path"
-  update_devcontainer_mounts "$devcontainer_json" "$host_path" "$container_path" "$readonly"
+  # Build mount string
+  local mount_str="${host_path}:${container_path}"
+  [[ "$readonly" == "true" ]] && mount_str="${mount_str}:ro"
 
+  # Remove any existing mount for the same container path, then add new one
+  if [[ -f "$mounts_file" ]]; then
+    local temp
+    temp=$(mktemp)
+    grep -v ":${container_path}\(:\|$\)" "$mounts_file" >"$temp" 2>/dev/null || true
+    mv "$temp" "$mounts_file"
+  fi
+  echo "$mount_str" >>"$mounts_file"
+
+  # Regenerate override and recreate container
+  generate_override "$sandbox_dir"
+
+  log_info "Adding mount: $host_path -> $container_path"
   log_info "Recreating container with new mount..."
-  devcontainer up --workspace-folder "$workspace_folder" --remove-existing-container
+  compose_cmd "$workspace_folder" up -d --force-recreate
 
-  log_success "Mount added: $host_path → $container_path"
+  log_success "Mount added: $host_path -> $container_path"
 }
 
 cmd_self_install() {
@@ -354,7 +346,7 @@ cmd_update() {
 
   if ! git -C "$SCRIPT_DIR" rev-parse --is-inside-work-tree &>/dev/null; then
     log_error "Not a git repository: $SCRIPT_DIR"
-    log_info "Re-clone with: rm -rf ~/.claude-devcontainer && git clone https://github.com/godzillaba/claude-code-devcontainer ~/.claude-devcontainer"
+    log_info "Re-clone with: rm -rf ~/.claude-sandbox && git clone https://github.com/trailofbits/claude-code-sandbox ~/.claude-sandbox"
     exit 1
   fi
 

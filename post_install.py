@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Post-install configuration for Claude Code devcontainer.
+"""Post-install configuration for Claude Code Docker sandbox.
 
-Runs on container creation to set up:
+Runs on every container start (via entrypoint.sh) to set up:
 - Claude settings (bypassPermissions mode)
 - Tmux configuration (200k history, mouse support)
 - Directory ownership fixes for mounted volumes
@@ -147,7 +147,7 @@ def setup_global_gitignore():
     config file that includes the host config and adds container-specific
     settings like core.excludesfile and delta configuration.
 
-    GIT_CONFIG_GLOBAL env var (set in devcontainer.json) points git to this
+    GIT_CONFIG_GLOBAL env var (set in docker-compose.yml) points git to this
     local config as the "global" config.
     """
     home = Path.home()
@@ -340,9 +340,9 @@ def main():
     """Run all post-install configuration."""
     print("[post_install] Starting post-install configuration...", file=sys.stderr)
 
+    fix_directory_ownership()
     setup_claude_settings()
     setup_tmux_config()
-    fix_directory_ownership()
     setup_global_gitignore()
     install_user_claude_md()
     install_pashov_skills()

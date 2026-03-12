@@ -1,16 +1,20 @@
-# Claude Code Devcontainer
-# Based on Microsoft devcontainer image for better devcontainer integration
+# Claude Code Docker Sandbox
 ARG UV_VERSION=0.10.0
 FROM ghcr.io/astral-sh/uv:${UV_VERSION}@sha256:78a7ff97cd27b7124a5f3c2aefe146170793c56a1e03321dd31a289f6d82a04f AS uv
-FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04@sha256:d94c97dd9cacf183d0a6fd12a8e87b526e9e928307674ae9c94139139c0c6eae
+FROM ubuntu:24.04@sha256:d1e2e92c075e5ca139d51a140fff46f84315c0fdce203eab2807c7e495eff4f9
 
 ARG TZ
 ENV TZ="$TZ"
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Install additional system packages (base image already includes git, curl, sudo, etc.)
+# Install system packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
+  git \
+  curl \
+  sudo \
+  ca-certificates \
+  gnupg2 \
   # headless browser stuff
   libxcomposite1 libxcursor1 libxdamage1 libxfixes3 libgtk-3-0t64 libpangocairo-1.0-0 libpango-1.0-0 libatk1.0-0t64 libcairo-gobject2 libgdk-pixbuf-2.0-0 libasound2t64 \
   libreoffice-writer \
@@ -30,12 +34,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   nano \
   unzip \
   vim \
-  # Network tools (for security testing)
-  dnsutils \
-  ipset \
-  iptables \
-  iproute2 \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Create vscode user (remove default ubuntu user that occupies UID/GID 1000)
+RUN userdel -r ubuntu 2>/dev/null; \
+  groupdel ubuntu 2>/dev/null; \
+  groupadd --gid 1000 vscode && \
+  useradd --uid 1000 --gid 1000 -m -s /bin/zsh vscode && \
+  echo 'vscode ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/vscode && \
+  chmod 0440 /etc/sudoers.d/vscode
+
+# Install GitHub CLI via apt repo
+RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg -o /usr/share/keyrings/githubcli-archive-keyring.gpg && \
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list && \
+  apt-get update && apt-get install -y --no-install-recommends gh && \
+  apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install git-delta
 ARG GIT_DELTA_VERSION=0.18.2
@@ -64,7 +77,7 @@ RUN mkdir -p /commandhistory /workspace /home/vscode/.claude /opt && \
   chown -R vscode:vscode /commandhistory /workspace /home/vscode/.claude /opt
 
 # Set environment variables
-ENV DEVCONTAINER=true
+ENV DOCKER_SANDBOX=true
 ENV SHELL=/bin/zsh
 ENV TERM=xterm-256color
 ENV EDITOR=nano
@@ -142,3 +155,8 @@ RUN git clone https://github.com/pashov/skills.git /opt/pashov-skills
 COPY --chown=vscode:vscode post_install.py /opt/post_install.py
 COPY --chown=vscode:vscode CLAUDE-user.md /opt/CLAUDE-user.md
 COPY --chown=vscode:vscode hooks/ /opt/hooks/
+
+# Entrypoint runs post_install.py (idempotent) on every container start
+COPY --chown=vscode:vscode entrypoint.sh /usr/local/bin/entrypoint.sh
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["sleep", "infinity"]

@@ -1,5 +1,5 @@
 # shellcheck shell=bash
-# Zsh configuration for Claude Code devcontainer
+# Zsh configuration for Claude Code Docker sandbox
 
 # Add Claude Code to PATH
 export PATH="$HOME/.local/bin:$PATH"
