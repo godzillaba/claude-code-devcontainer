@@ -50,6 +50,18 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg -o 
   apt-get update && apt-get install -y --no-install-recommends gh && \
   apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Install Docker CE (Docker-in-Docker)
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc && \
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" > /etc/apt/sources.list.d/docker.list && \
+  apt-get update && apt-get install -y --no-install-recommends \
+    docker-ce \
+    docker-ce-cli \
+    containerd.io \
+    docker-buildx-plugin \
+    docker-compose-plugin && \
+  apt-get clean && rm -rf /var/lib/apt/lists/* && \
+  usermod -aG docker vscode
+
 # Install git-delta
 ARG GIT_DELTA_VERSION=0.18.2
 RUN ARCH=$(dpkg --print-architecture) && \
@@ -70,11 +82,10 @@ RUN ARCH=$(dpkg --print-architecture) && \
   esac && \
   curl -fsSL "https://github.com/junegunn/fzf/releases/download/v${FZF_VERSION}/fzf-${FZF_VERSION}-${FZF_ARCH}.tar.gz" | tar -xz -C /usr/local/bin
 
-# Create directories and set ownership (combined for fewer layers)
-RUN mkdir -p /commandhistory /workspace /home/vscode/.claude /opt && \
-  touch /commandhistory/.bash_history && \
-  touch /commandhistory/.zsh_history && \
-  chown -R vscode:vscode /commandhistory /workspace /home/vscode/.claude /opt
+# Create shared directories that need root ownership initially
+RUN mkdir -p /commandhistory /workspace /opt && \
+  touch /commandhistory/.bash_history /commandhistory/.zsh_history && \
+  chown -R vscode:vscode /commandhistory /workspace /opt
 
 # Set environment variables
 ENV DOCKER_SANDBOX=true
@@ -84,9 +95,10 @@ ENV EDITOR=nano
 ENV VISUAL=nano
 
 WORKDIR /workspace
-
-# Switch to non-root user for remaining setup
 USER vscode
+
+# Create user directories (no chown needed — already running as vscode)
+RUN mkdir -p ~/.claude
 
 # Set PATH early so claude and other user-installed binaries are available
 ENV PATH="/home/vscode/.local/bin:$PATH"

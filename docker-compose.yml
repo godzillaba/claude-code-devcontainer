@@ -5,19 +5,19 @@ services:
       args:
         TZ: ${TZ:-UTC}
     init: true
-    security_opt:
-      - apparmor=unconfined
-      - seccomp=unconfined
+    privileged: true
     volumes:
       - ${WORKSPACE_DIR:-.}:/workspace:delegated
       - bash-history:/commandhistory
       - claude-config:/home/vscode/.claude
-      - gh-config:/home/vscode/.config/gh
+      - gh-config:/home/vscode/.gh
       - ${HOME}/.gitconfig:/home/vscode/.gitconfig:ro
+      - docker-data:/var/lib/docker
     environment:
       COLORTERM: truecolor
       NODE_OPTIONS: --max-old-space-size=4096
       CLAUDE_CONFIG_DIR: /home/vscode/.claude
+      GH_CONFIG_DIR: /home/vscode/.gh
       POWERLEVEL9K_DISABLE_GITSTATUS: "true"
       GIT_CONFIG_GLOBAL: /home/vscode/.gitconfig.local
       UV_LINK_MODE: copy
@@ -37,3 +37,4 @@ volumes:
   bash-history:
   claude-config:
   gh-config:
+  docker-data:

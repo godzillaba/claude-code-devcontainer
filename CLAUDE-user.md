@@ -8,6 +8,7 @@ When spawning any subagent via the Agent tool, always include the full contents 
 
 Always commit with `--no-gpg-sign` — GPG signing is not configured in this container.
 Never commit unless you are explicitly asked to.
+Never add "Co-Authored-By" or any AI attribution to commit messages. Write commit messages as if a human wrote them.
 
 ## Tooling Philosophy
 
