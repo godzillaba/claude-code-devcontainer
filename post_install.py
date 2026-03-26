@@ -317,6 +317,7 @@ def install_claude_plugins():
         "building-secure-contracts@trailofbits",
         "entry-point-analyzer@trailofbits",
         "property-based-testing@trailofbits",
+        "differential-review@trailofbits",
         "mutest@godzillaba-plugins",
         "ast-grep",
     ]
