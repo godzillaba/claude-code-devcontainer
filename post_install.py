@@ -319,6 +319,7 @@ def install_claude_plugins():
         "property-based-testing@trailofbits",
         "differential-review@trailofbits",
         "mutest@godzillaba-plugins",
+        "nitro-testnode@godzillaba-plugins",
         "ast-grep",
     ]
     for plugin in plugins:
