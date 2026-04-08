@@ -33,6 +33,7 @@ setopt ALWAYS_TO_END           # Move cursor to end after completion
 alias gd2='DELTA_FEATURES=side-by-side git diff'
 alias fd=fdfind
 alias sg=ast-grep
+alias claude='claude --effort max'
 alias claude-yolo='claude --dangerously-skip-permissions'
 alias ll='ls -lah --color=auto'
 alias l='ll'
