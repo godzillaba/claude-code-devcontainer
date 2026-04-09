@@ -33,6 +33,50 @@ def setup_claude_settings():
         settings["permissions"] = {}
     settings["permissions"]["defaultMode"] = "bypassPermissions"
 
+    # Deny write operations on MCP tools (read-only tools remain allowed)
+    denied_mcp_tools = [
+        # Notion
+        "mcp__claude_ai_Notion__notion-create-comment",
+        "mcp__claude_ai_Notion__notion-create-database",
+        "mcp__claude_ai_Notion__notion-create-pages",
+        "mcp__claude_ai_Notion__notion-create-view",
+        "mcp__claude_ai_Notion__notion-duplicate-page",
+        "mcp__claude_ai_Notion__notion-move-pages",
+        "mcp__claude_ai_Notion__notion-update-data-source",
+        "mcp__claude_ai_Notion__notion-update-page",
+        "mcp__claude_ai_Notion__notion-update-view",
+        # Slack
+        "mcp__claude_ai_Slack__slack_create_canvas",
+        "mcp__claude_ai_Slack__slack_update_canvas",
+        "mcp__claude_ai_Slack__slack_send_message",
+        "mcp__claude_ai_Slack__slack_send_message_draft",
+        "mcp__claude_ai_Slack__slack_schedule_message",
+        # Linear
+        "mcp__claude_ai_Linear__create_attachment",
+        "mcp__claude_ai_Linear__create_document",
+        "mcp__claude_ai_Linear__create_issue_label",
+        "mcp__claude_ai_Linear__delete_attachment",
+        "mcp__claude_ai_Linear__delete_comment",
+        "mcp__claude_ai_Linear__delete_customer",
+        "mcp__claude_ai_Linear__delete_customer_need",
+        "mcp__claude_ai_Linear__delete_status_update",
+        "mcp__claude_ai_Linear__save_comment",
+        "mcp__claude_ai_Linear__save_customer",
+        "mcp__claude_ai_Linear__save_customer_need",
+        "mcp__claude_ai_Linear__save_initiative",
+        "mcp__claude_ai_Linear__save_issue",
+        "mcp__claude_ai_Linear__save_milestone",
+        "mcp__claude_ai_Linear__save_project",
+        "mcp__claude_ai_Linear__save_status_update",
+        "mcp__claude_ai_Linear__update_document",
+        # Google Drive
+        "mcp__claude_ai_Google_Drive__create_file",
+    ]
+    settings["permissions"]["deny"] = settings["permissions"].get("deny", [])
+    for tool in denied_mcp_tools:
+        if tool not in settings["permissions"]["deny"]:
+            settings["permissions"]["deny"].append(tool)
+
     # Set up hooks
     hooks = {}
 
@@ -320,6 +364,7 @@ def install_claude_plugins():
         "differential-review@trailofbits",
         "mutest@godzillaba-plugins",
         "nitro-testnode@godzillaba-plugins",
+        "company-search@godzillaba-plugins",
         "ast-grep",
     ]
     for plugin in plugins:

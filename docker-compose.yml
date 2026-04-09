@@ -13,6 +13,9 @@ services:
       - gh-config:/home/vscode/.gh
       - ${HOME}/.gitconfig:/home/vscode/.gitconfig:ro
       - docker-data:/var/lib/docker
+    env_file:
+      - path: ${HOME}/.config/claude-sandbox.env
+        required: false
     environment:
       COLORTERM: truecolor
       NODE_OPTIONS: --max-old-space-size=4096
