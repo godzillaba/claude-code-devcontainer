@@ -163,6 +163,10 @@ RUN echo 'source ~/.zshrc.custom' >> /home/vscode/.zshrc
 # Clone pashov/skills (custom Claude Code slash commands)
 RUN git clone https://github.com/pashov/skills.git /opt/pashov-skills
 
+# Clone nemesis-auditor skills (feynman, nemesis, state-inconsistency auditors)
+RUN git clone https://github.com/0xiehnnkta/nemesis-auditor.git /opt/nemesis-auditor && \
+  git -C /opt/nemesis-auditor checkout 75cecc6
+
 # Copy post_install script and user-level CLAUDE.md
 COPY --chown=vscode:vscode post_install.py /opt/post_install.py
 COPY --chown=vscode:vscode CLAUDE-user.md /opt/CLAUDE-user.md

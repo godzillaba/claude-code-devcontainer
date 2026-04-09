@@ -299,6 +299,21 @@ def install_pashov_skills():
         print("[post_install] Installed pashov skill: /solidity-auditor", file=sys.stderr)
 
 
+def install_nemesis_auditor_skills():
+    """Install nemesis-auditor skills (feynman, nemesis, state-inconsistency auditors)."""
+    src = Path("/opt/nemesis-auditor/.claude/skills")
+    dst = Path.home() / ".claude" / "skills"
+    if not src.exists():
+        print("[post_install] Warning: nemesis-auditor not found, skipping", file=sys.stderr)
+        return
+    import shutil
+    dst.mkdir(parents=True, exist_ok=True)
+    for skill in src.iterdir():
+        if skill.is_dir():
+            shutil.copytree(skill, dst / skill.name, dirs_exist_ok=True)
+            print(f"[post_install] Installed nemesis skill: {skill.name}", file=sys.stderr)
+
+
 def install_hooks():
     """Copy hook scripts into the Claude hooks directory."""
     src = Path("/opt/hooks")
@@ -393,6 +408,7 @@ def main():
     setup_global_gitignore()
     install_user_claude_md()
     install_pashov_skills()
+    install_nemesis_auditor_skills()
     install_hooks()
     install_claude_plugins()
 
