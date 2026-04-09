@@ -37,6 +37,7 @@ Commands:
     exec <cmd>          Execute a command in the running container
     upgrade             Upgrade Claude Code to latest version
     mount <host> <cont> Add a mount to the sandbox (recreates container)
+    firewall            Block containers from accessing LAN and host ports
     help                Show this help message
 
 Examples:
@@ -77,6 +78,11 @@ check_docker_cli() {
   if ! docker compose version &>/dev/null; then
     log_error "docker compose not available."
     log_info "Update Docker or install the compose plugin"
+    exit 1
+  fi
+  if ! docker info --format '{{json .Runtimes}}' 2>/dev/null | grep -q sysbox-runc; then
+    log_error "sysbox-runc runtime not found."
+    log_info "Install Sysbox: https://github.com/nestybox/sysbox#installation"
     exit 1
   fi
 }
@@ -203,13 +209,58 @@ cmd_up() {
 
   check_docker_cli
 
-  # Ensure host .gitconfig exists (compose bind mount requires it)
+  # Ensure files exist for read-only bind mounts
   test -f "$HOME/.gitconfig" || touch "$HOME/.gitconfig"
+  test -f "$workspace_folder/.gitattributes" || touch "$workspace_folder/.gitattributes"
 
   log_info "Starting sandbox in $workspace_folder..."
 
   compose_cmd "$workspace_folder" up -d
   log_success "Sandbox started"
+}
+
+cmd_firewall() {
+  if [[ "$(id -u)" -ne 0 ]]; then
+    log_error "Firewall requires root. Run: sudo devc firewall"
+    exit 1
+  fi
+
+  for cmd in iptables netfilter-persistent; do
+    if ! command -v "$cmd" &>/dev/null; then
+      log_error "$cmd not found. Install with: apt install iptables-persistent"
+      exit 1
+    fi
+  done
+
+  local rules_changed=false
+
+  # DOCKER-USER: block forwarded traffic to LAN
+  for rule in "-d 10.0.0.0/8 -j DROP" "-d 192.168.0.0/16 -j DROP"; do
+    if ! iptables -C DOCKER-USER $rule 2>/dev/null; then
+      iptables -A DOCKER-USER $rule
+      rules_changed=true
+    fi
+  done
+
+  # INPUT: block containers from reaching host ports via bridge interfaces
+  for rule in "-i docker0 -j DROP" "-i br-+ -j DROP"; do
+    if ! iptables -C INPUT $rule 2>/dev/null; then
+      iptables -A INPUT $rule
+      rules_changed=true
+    fi
+  done
+
+  if [[ "$rules_changed" == "true" ]]; then
+    local ts
+    ts="$(date +%Y%m%d-%H%M%S)"
+    for f in /etc/iptables/rules.v4 /etc/iptables/rules.v6; do
+      [[ -f "$f" ]] && cp "$f" "${f}.${ts}.bak" && log_info "Backed up ${f}.${ts}.bak"
+    done
+    netfilter-persistent save
+    log_success "Firewall rules applied and saved"
+  else
+    log_success "Firewall rules already in place"
+  fi
 }
 
 cmd_rebuild() {
@@ -218,8 +269,9 @@ cmd_rebuild() {
 
   check_docker_cli
 
-  # Ensure host .gitconfig exists
+  # Ensure files exist for read-only bind mounts
   test -f "$HOME/.gitconfig" || touch "$HOME/.gitconfig"
+  test -f "$workspace_folder/.gitattributes" || touch "$workspace_folder/.gitattributes"
 
   log_info "Rebuilding sandbox in $workspace_folder..."
 
@@ -417,6 +469,9 @@ main() {
     ;;
   template)
     cmd_template "$@"
+    ;;
+  firewall)
+    cmd_firewall
     ;;
   help | --help | -h)
     print_usage

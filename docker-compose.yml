@@ -5,9 +5,14 @@ services:
       args:
         TZ: ${TZ:-UTC}
     init: true
-    privileged: true
+    runtime: sysbox-runc
     volumes:
       - ${WORKSPACE_DIR:-.}:/workspace:delegated
+      - ${WORKSPACE_DIR:-.}/.claude-sandbox:/workspace/.claude-sandbox:ro
+      - ${WORKSPACE_DIR:-.}/.git/hooks:/workspace/.git/hooks:ro
+      - ${WORKSPACE_DIR:-.}/.git/config:/workspace/.git/config:ro
+      - ${WORKSPACE_DIR:-.}/.gitattributes:/workspace/.gitattributes:ro
+      - ${WORKSPACE_DIR:-.}/.git/info:/workspace/.git/info:ro
       - bash-history:/commandhistory
       - claude-config:/home/vscode/.claude
       - gh-config:/home/vscode/.gh

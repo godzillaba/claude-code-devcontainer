@@ -27,6 +27,12 @@ Claude Code Docker Sandbox — a sandboxed development environment for running C
 ## Security Invariants
 
 - `bypassPermissions` is only safe because the container itself is the sandbox
+- Sysbox runtime (`sysbox-runc`) provides secure Docker-in-Docker without `privileged: true`. User namespace remapping ensures container root is unprivileged on the host, and block devices are not accessible.
 - Host `~/.gitconfig` is mounted read-only — the container uses a local config overlay via `GIT_CONFIG_GLOBAL`
 - `entrypoint.sh` is baked into the image (not mounted), so container processes can't modify startup behavior
 - No extra capabilities granted — the container has no elevated privileges
+- `devc firewall` blocks container access to LAN (10.0.0.0/8, 192.168.0.0/16) and host ports via iptables on the host. Containers can't modify these rules since they're in the host's network namespace.
+
+## Testing
+
+Docker-in-Docker is available. Start the daemon with `sudo dockerd &>/dev/null &`, then use `docker run`/`docker exec` as normal.
