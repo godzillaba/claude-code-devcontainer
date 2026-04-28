@@ -1,6 +1,18 @@
 # Claude Code Docker Sandbox
 ARG UV_VERSION=0.10.0
 FROM ghcr.io/astral-sh/uv:${UV_VERSION}@sha256:78a7ff97cd27b7124a5f3c2aefe146170793c56a1e03321dd31a289f6d82a04f AS uv
+
+# Compile esk (Ethereum Swiss Army Knife) into a standalone binary via `bun --compile`
+ARG ESK_COMMIT=e2bced08a6588d6f4d0246457238a5450bcf84fc
+FROM oven/bun:1.3.13@sha256:87416c977a612a204eb54ab9f3927023c2a3c971f4f345a01da08ea6262ae30e AS esk-builder
+ARG ESK_COMMIT
+RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates && rm -rf /var/lib/apt/lists/* && \
+  git clone https://github.com/godzillaba/eth-cli /tmp/esk && \
+  cd /tmp/esk && \
+  git checkout ${ESK_COMMIT} && \
+  bun install --frozen-lockfile && \
+  bun build src/index.ts --compile --outfile=/esk
+
 FROM ubuntu:24.04@sha256:d1e2e92c075e5ca139d51a140fff46f84315c0fdce203eab2807c7e495eff4f9
 
 ARG TZ
@@ -148,6 +160,11 @@ RUN curl -fsSL "https://github.com/ethereum/solidity/releases/download/v${SOLC_V
 ARG GAMBIT_VERSION=1.0.6
 RUN curl -fsSL "https://github.com/Certora/gambit/releases/download/v${GAMBIT_VERSION}/gambit-linux-v${GAMBIT_VERSION}" -o /usr/local/bin/gambit && \
   chmod +x /usr/local/bin/gambit
+
+# Install esk (Ethereum Swiss Army Knife) — built in the esk-builder stage
+COPY --from=esk-builder /esk /usr/local/bin/esk
+RUN chmod +x /usr/local/bin/esk
+
 USER vscode
 
 # Add to PATH
