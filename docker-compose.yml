@@ -13,6 +13,7 @@ services:
       - ${WORKSPACE_DIR:-.}/.git/config:/workspace/.git/config:ro
       - ${WORKSPACE_DIR:-.}/.gitattributes:/workspace/.gitattributes:ro
       - ${WORKSPACE_DIR:-.}/.git/info:/workspace/.git/info:ro
+      - ${WORKSPACE_DIR:-.}/.vscode:/workspace/.vscode:ro
       - bash-history:/commandhistory
       - claude-config:/home/vscode/.claude
       - gh-config:/home/vscode/.gh
