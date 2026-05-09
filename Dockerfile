@@ -44,6 +44,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   # Utilities
   jq \
   nano \
+  trash-cli \
   unzip \
   vim \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
