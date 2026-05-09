@@ -36,3 +36,4 @@ Inspired by NASA/JPL's "Power of 10" — code must be quickly and easily reviewa
 - Prefer fewer lines. Three similar lines are better than a helper function used once.
 - Don't refactor, rename, or "improve" code you weren't asked to change.
 - No clever tricks. Code should be obvious, not impressive.
+- Stick to plain ASCII in code. No em-dashes, smart quotes, ellipses, non-breaking spaces, or other Unicode punctuation — only characters a human types on a normal keyboard. Applies to identifiers, strings, and comments.
