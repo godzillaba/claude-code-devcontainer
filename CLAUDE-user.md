@@ -22,6 +22,8 @@ If a `sudo` command is blocked by the organization's permission policy, write th
 
 When adding or modifying a feature, always update the relevant documentation if it exists. Keep docs in sync with code.
 
+Heavily favor brevity when writing or editing documentation, code comments, commit messages, and other prose. Don't write redundant content. Don't add anything unless it's clearly relevant or the user explicitly asked for it.
+
 ## Code Style
 
 Inspired by NASA/JPL's "Power of 10" — code must be quickly and easily reviewable by a human.
