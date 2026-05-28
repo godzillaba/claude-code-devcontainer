@@ -22,6 +22,26 @@ If a `sudo` command is blocked by the organization's permission policy, write th
 
 Docker-in-Docker is available. Start the daemon with `sudo dockerd &>/dev/null &`, then use `docker run`/`docker exec` as normal.
 
+## Secrets and RPCs
+
+`ETHERSCAN_API_KEY` and various blockchain RPC URLs (env vars matching `*_URL`) are available in the environment. Run `env | grep -E '_URL'` to list what's available.
+
+## Arbitrum Addresses
+
+A reference file of well-known Arbitrum addresses (ARB1, Nova, Sepolia bridges/gateways/rollups, governance, security councils, precompiles) is available at `/opt/arbitrum-addresses.env`. Source it with `set -a; . /opt/arbitrum-addresses.env; set +a` if you need them as env vars.
+
+## esk
+
+`esk` (Ethereum Swiss Army Knife) is installed. If you're doing a blockchain task, check `esk --help` first — it has Arbitrum/Nitro-flavored helpers (retryable/outbox redeems, RollupCreator templates, fee collectors, chain owners, proxy admin/impl, etherscan ABI/creation, deposit-token) plus Safe tx hash/send and generic utils. Prefer it over hand-rolling with `cast` when a subcommand fits.
+
+To get chain owners, always use `esk chain-owners`. Do not call `ArbOwnerPublic.getAllChainOwners()`.
+
+## Identifying Unknown Contracts
+
+When you encounter an address and need to figure out what contract it is, check `/opt/arbitrum-addresses.env`. If not in the known list, use `esk es-name <ADDRESS>` to get the contract's name or `esk es-abi <ADDRESS>` for ABI.
+
+If you need the contract's source code, use `forge clone` in a temporary directory.
+
 ## Documentation
 
 When adding or modifying a feature, always update the relevant documentation if it exists. Keep docs in sync with code.

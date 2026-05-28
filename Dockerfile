@@ -188,6 +188,7 @@ RUN git clone https://github.com/0xiehnnkta/nemesis-auditor.git /opt/nemesis-aud
 # Copy post_install script and user-level CLAUDE.md
 COPY --chown=vscode:vscode post_install.py /opt/post_install.py
 COPY --chown=vscode:vscode CLAUDE-user.md /opt/CLAUDE-user.md
+COPY --chown=vscode:vscode arbitrum-addresses.env /opt/arbitrum-addresses.env
 COPY --chown=vscode:vscode hooks/ /opt/hooks/
 
 # Entrypoint runs post_install.py (idempotent) on every container start

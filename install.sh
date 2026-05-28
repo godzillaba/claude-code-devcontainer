@@ -190,6 +190,7 @@ cmd_template() {
   cp "$SCRIPT_DIR/post_install.py" "$sandbox_dir/"
   cp "$SCRIPT_DIR/.zshrc" "$sandbox_dir/"
   cp "$SCRIPT_DIR/CLAUDE-user.md" "$sandbox_dir/"
+  cp "$SCRIPT_DIR/arbitrum-addresses.env" "$sandbox_dir/"
   cp -r "$SCRIPT_DIR/hooks" "$sandbox_dir/"
 
   # Restore preserved mounts
