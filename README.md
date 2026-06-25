@@ -3,6 +3,12 @@
 A personal [Docker Sandbox](https://docs.docker.com/ai/sandboxes/) (`sbx`) template for Claude
 Code. One image (`template/Dockerfile`) extending `docker/sandbox-templates:claude-code-docker`.
 
+## Known Issues
+
+URLs not accessible in sandbox.
+
+claude json settings not honored.
+
 ## Build & run
 
 ```bash
