@@ -6,14 +6,8 @@ Code. One image (`template/Dockerfile`) extending `docker/sandbox-templates:clau
 ## Build & run
 
 ```bash
-docker build -t <registry>/claude-sbx:v1 --push template/
-sbx run --template <registry>/claude-sbx:v1 claude
-```
-
-For a local image, `sbx template load` it first:
-
-```bash
-docker image save <registry>/claude-sbx:v1 -o claude-sbx.tar
+docker build -t claude-sbx
+docker image save /claude-sbx -o claude-sbx.tar
 sbx template load claude-sbx.tar
 ```
 
