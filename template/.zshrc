@@ -1,5 +1,5 @@
 # shellcheck shell=bash
-# Zsh configuration for Claude Code Docker sandbox
+# Zsh configuration for the Claude Code sbx template
 
 # Add Claude Code to PATH
 export PATH="$HOME/.local/bin:$PATH"
@@ -10,7 +10,7 @@ export PATH="$FNM_DIR:$PATH"
 eval "$(fnm env --use-on-cd)"
 
 # History settings
-export HISTFILE=/commandhistory/.zsh_history
+export HISTFILE="$HOME/.zsh_history"
 export HISTSIZE=200000
 export SAVEHIST=200000
 setopt SHARE_HISTORY
