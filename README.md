@@ -5,8 +5,6 @@ Code. One image (`template/Dockerfile`) extending `docker/sandbox-templates:clau
 
 ## Known Issues
 
-URLs not accessible in sandbox.
-
 claude json settings not honored.
 
 ## Build & run

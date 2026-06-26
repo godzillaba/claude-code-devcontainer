@@ -58,3 +58,7 @@ _fzf_compgen_dir() {
 
 # Source fzf shell integration (built-in since fzf 0.48+)
 eval "$(fzf --zsh)"
+
+# RPC endpoints + Etherscan key, baked from template/.env into /opt/rpc.env.
+# (Non-interactive bash gets these via /etc/sandbox-persistent.sh instead.)
+set -a; [ -f /opt/rpc.env ] && source /opt/rpc.env; set +a

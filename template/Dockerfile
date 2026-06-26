@@ -115,6 +115,15 @@ RUN chmod +x /usr/local/bin/esk
 # Reference data
 COPY arbitrum-addresses.env /opt/arbitrum-addresses.env
 
+# RPC endpoints + Etherscan key, baked verbatim from template/.env (gitignored; required at
+# build). Sourced into the env: non-interactive bash (the Bash tool) reads it via
+# BASH_ENV=/etc/sandbox-persistent.sh; interactive zsh loads it from .zshrc. `set -a` exports
+# the quoted KEY="value" lines.
+COPY .env /opt/rpc.env
+RUN touch /etc/sandbox-persistent.sh \
+ && printf 'set -a; [ -f /opt/rpc.env ] && . /opt/rpc.env; set +a\n' >> /etc/sandbox-persistent.sh \
+ && chown agent:agent /etc/sandbox-persistent.sh
+
 # Claude Code enterprise managed settings: MCP write-tool deny-list + hooks.
 # Lives here (not ~/.claude/settings.json) because sbx regenerates the user
 # settings.json on every sandbox creation; managed settings are merged on top
