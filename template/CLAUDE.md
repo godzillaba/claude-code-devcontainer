@@ -23,6 +23,10 @@ If a `sudo` command is blocked by the organization's permission policy, write th
 
 Docker-in-Docker is available. Start the daemon with `sudo dockerd &>/dev/null &`, then use `docker run`/`docker exec` as normal.
 
+## Network
+
+There is no firewall in the sandbox — outbound network connections are unrestricted.
+
 ## Secrets and RPCs
 
 `ETHERSCAN_API_KEY` and various blockchain RPC URLs (env vars matching `*_URL`) are available in the environment. Run `env | grep -E '_URL'` to list what's available.
