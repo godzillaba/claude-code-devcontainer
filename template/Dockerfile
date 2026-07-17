@@ -124,13 +124,6 @@ RUN touch /etc/sandbox-persistent.sh \
  && printf 'set -a; [ -f /opt/rpc.env ] && . /opt/rpc.env; set +a\n' >> /etc/sandbox-persistent.sh \
  && chown agent:agent /etc/sandbox-persistent.sh
 
-# Claude Code enterprise managed settings: MCP write-tool deny-list + hooks.
-# Lives here (not ~/.claude/settings.json) because sbx regenerates the user
-# settings.json on every sandbox creation; managed settings are merged on top
-# with highest precedence and survive that regeneration.
-RUN mkdir -p /etc/claude-code
-COPY managed-settings.json /etc/claude-code/managed-settings.json
-
 # Default the agent user's login shell to zsh
 RUN chsh -s /bin/zsh agent
 
