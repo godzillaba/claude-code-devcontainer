@@ -3,9 +3,11 @@
 A personal [Docker Sandbox](https://docs.docker.com/ai/sandboxes/) (`sbx`) template for Claude
 Code. One image (`template/Dockerfile`) extending `docker/sandbox-templates:claude-code-docker`.
 
-## Known Issues
+## Claude settings
 
-claude json settings not honored.
+`template/claude-settings.json` is applied by a `claude` PATH wrapper that injects
+`--settings` at launch. File-based managed settings don't work here: the org's
+server-managed settings make claude ignore `/etc/claude-code/managed-settings.json`.
 
 ## Build & run
 

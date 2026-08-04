@@ -2,7 +2,7 @@
 # Flags hardcoded 4-byte Solidity function selectors in newly added lines.
 # Selectors should be computed at runtime to avoid silent correctness bugs.
 
-FILE="$CLAUDE_FILE_EDIT_FILE_PATH"
+FILE=$(jq -r '.tool_input.file_path // empty')
 
 case "$FILE" in
   *.ts|*.sol|*.js) ;;

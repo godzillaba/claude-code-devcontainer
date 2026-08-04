@@ -231,6 +231,15 @@ RUN for m in \
     claude plugin install "$p" || echo "WARN: plugin install failed: $p" >&2; \
   done
 
+# Claude settings for sandboxes. The org's server-managed settings make claude
+# ignore /etc/claude-code/managed-settings.json entirely (managed sources don't
+# merge), so a wrapper injects them via --settings, which does merge. sbx execs
+# `claude` by PATH lookup using the image ENV, so the wrapper dir goes first.
+# Placed after the plugin installs so the wrapper is inert during the build.
+COPY claude-settings.json /etc/claude-code/claude-settings.json
+COPY claude-wrapper /opt/claude-wrapper/claude
+ENV PATH="/opt/claude-wrapper:${PATH}"
+
 # Restore the base image's working directory (where sbx mounts the workspace and
 # launches the agent). Do NOT override ENTRYPOINT/CMD: the base already runs
 # `tini -- claude --dangerously-skip-permissions`.
