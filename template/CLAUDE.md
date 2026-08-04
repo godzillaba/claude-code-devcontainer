@@ -6,14 +6,14 @@ When spawning any subagent via the Agent tool, always include the full contents 
 
 ## Git
 
-Always commit with `--no-gpg-sign` — GPG signing is not configured in this container.
+Always commit with `--no-gpg-sign` - GPG signing is not configured in this container.
 Never commit unless you are explicitly asked to.
 Never add "Co-Authored-By" or any AI attribution to commit messages. Write commit messages as if a human wrote them.
 Never amend commits or rewrite history in any way (rebase, reset, force-push, etc.) unless I very explicitly ask for it.
 
 ## Tooling Philosophy
 
-Always use the right tool for the job — install real libraries instead of reimplementing things with stdlib. If a dependency is missing and can't be installed due to the container/firewall setup, ask the user to help unblock it (e.g. add a domain to the firewall, add a package to the Dockerfile, rebuild the container). Don't silently work around missing tools with inferior hand-rolled alternatives.
+Always use the right tool for the job - install real libraries instead of reimplementing things with stdlib. If a dependency is missing and can't be installed due to the container/firewall setup, ask the user to help unblock it (e.g. add a domain to the firewall, add a package to the Dockerfile, rebuild the container). Don't silently work around missing tools with inferior hand-rolled alternatives.
 
 Use `uv` for all Python packaging. `uv tool install <pkg>` for CLI tools, `uv add <pkg>` for project dependencies, `uv run --with <pkg>` for ad-hoc usage. Never use `pip install` directly.
 
@@ -25,7 +25,7 @@ Docker-in-Docker is available. Start the daemon with `sudo dockerd &>/dev/null &
 
 ## Network
 
-There is no firewall in the sandbox — outbound network connections are unrestricted.
+There is no firewall in the sandbox - outbound network connections are unrestricted.
 
 ## Secrets and RPCs
 
@@ -37,7 +37,7 @@ A reference file of well-known Arbitrum addresses (ARB1, Nova, Sepolia bridges/g
 
 ## esk
 
-`esk` (Ethereum Swiss Army Knife) is installed. If you're doing a blockchain task, check `esk --help` first — it has Arbitrum/Nitro-flavored helpers (retryable/outbox redeems, RollupCreator templates, fee collectors, chain owners, proxy admin/impl, etherscan ABI/creation, deposit-token) plus Safe tx hash/send and generic utils. Prefer it over hand-rolling with `cast` when a subcommand fits.
+`esk` (Ethereum Swiss Army Knife) is installed. If you're doing a blockchain task, check `esk --help` first - it has Arbitrum/Nitro-flavored helpers (retryable/outbox redeems, RollupCreator templates, fee collectors, chain owners, proxy admin/impl, etherscan ABI/creation, deposit-token) plus Safe tx hash/send and generic utils. Prefer it over hand-rolling with `cast` when a subcommand fits.
 
 To get chain owners, always use `esk chain-owners`. Do not call `ArbOwnerPublic.getAllChainOwners()`.
 
@@ -53,9 +53,11 @@ When adding or modifying a feature, always update the relevant documentation if 
 
 Heavily favor brevity when writing or editing documentation, code comments, commit messages, and other prose. Don't write redundant content. Don't add anything unless it's clearly relevant or the user explicitly asked for it.
 
+When editing an existing doc or project, always preserve its existing style - tone, formatting, structure, and conventions. Match what's there rather than imposing your own.
+
 ## Code Style
 
-Inspired by NASA/JPL's "Power of 10" — code must be quickly and easily reviewable by a human.
+Inspired by NASA/JPL's "Power of 10" - code must be quickly and easily reviewable by a human.
 
 - Write minimal, concise code. No unnecessary abstractions or indirection.
 - Functions should be short enough to fit on a screen (~60 lines max). If longer, split by responsibility.
@@ -67,7 +69,7 @@ Inspired by NASA/JPL's "Power of 10" — code must be quickly and easily reviewa
 - Prefer fewer lines. Three similar lines are better than a helper function used once.
 - Don't refactor, rename, or "improve" code you weren't asked to change.
 - No clever tricks. Code should be obvious, not impressive.
-- Stick to plain ASCII in code. No em-dashes, smart quotes, ellipses, non-breaking spaces, or other Unicode punctuation — only characters a human types on a normal keyboard. Applies to identifiers, strings, and comments.
+- Stick to plain ASCII in code. No em-dashes, smart quotes, ellipses, non-breaking spaces, or other Unicode punctuation - only characters a human types on a normal keyboard. Applies to identifiers, strings, and comments.
 
 ## Solidity
 
