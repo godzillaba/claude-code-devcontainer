@@ -96,30 +96,5 @@
       "mcp__claude_ai_Ramp__authenticate",
       "mcp__claude_ai_Ramp__complete_authentication"
     ]
-  },
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash /home/agent/.claude/hooks/check-hardcoded-selectors.bash"
-          }
-        ]
-      }
-    ],
-    "Notification": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash -c '[ -n \"$NTFY_TOPIC\" ] && curl -fsS -d \"Claude is waiting\" \"https://ntfy.sh/$NTFY_TOPIC\" || true'",
-            "async": true
-          }
-        ]
-      }
-    ]
   }
 }
