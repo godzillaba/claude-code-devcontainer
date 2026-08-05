@@ -1,8 +1,4 @@
 #!/bin/bash
-# sbx launches `claude` by PATH lookup. The org's server-managed settings make
-# claude ignore /etc/claude-code/managed-settings.json (managed sources don't
-# merge), so this wrapper injects the sandbox settings via --settings instead,
-# which merges into the settings hierarchy like any CLI flag.
 real=$(type -aP claude | grep -vF /opt/claude-wrapper | head -1)
 case " $* " in *" --settings"*) exec "$real" "$@" ;; esac
 exec "$real" --settings /etc/claude-code/claude-settings.json "$@"

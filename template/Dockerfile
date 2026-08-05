@@ -231,9 +231,7 @@ RUN for m in \
     claude plugin install "$p" || echo "WARN: plugin install failed: $p" >&2; \
   done
 
-# Claude settings for sandboxes. The org's server-managed settings make claude
-# ignore /etc/claude-code/managed-settings.json entirely (managed sources don't
-# merge), so a wrapper injects them via --settings, which does merge. sbx execs
+# Claude settings for sandboxes. A wrapper injects via --settings, which does merge. sbx execs
 # `claude` by PATH lookup using the image ENV, so the wrapper dir goes first.
 # Placed after the plugin installs so the wrapper is inert during the build.
 COPY claude-settings.json /etc/claude-code/claude-settings.json

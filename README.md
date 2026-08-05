@@ -6,8 +6,7 @@ Code. One image (`template/Dockerfile`) extending `docker/sandbox-templates:clau
 ## Claude settings
 
 `template/claude-settings.json` is applied by a `claude` PATH wrapper that injects
-`--settings` at launch. File-based managed settings don't work here: the org's
-server-managed settings make claude ignore `/etc/claude-code/managed-settings.json`.
+`--settings` at launch.
 
 ## Build & run
 
