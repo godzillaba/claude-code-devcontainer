@@ -216,7 +216,8 @@ RUN for m in \
       trailofbits/skills-curated \
       godzillaba/my-plugins \
       ast-grep/agent-skill \
-      ayghri/i-have-adhd; do \
+      ayghri/i-have-adhd \
+      JuliusBrussee/caveman; do \
     claude plugin marketplace add "$m" || echo "WARN: marketplace add failed: $m" >&2; \
   done; \
   for p in \
@@ -229,13 +230,18 @@ RUN for m in \
       nitro-testnode@godzillaba-plugins \
       company-search@godzillaba-plugins \
       ast-grep \
-      i-have-adhd@i-have-adhd; do \
+      i-have-adhd@i-have-adhd \
+      caveman@caveman; do \
     claude plugin install "$p" || echo "WARN: plugin install failed: $p" >&2; \
   done
 
 # Always-on ADHD output shaping: the i-have-adhd plugin's SessionStart hook
 # injects its ruleset whenever this flag file exists.
 RUN touch /home/agent/.claude/.i-have-adhd-always
+
+# caveman auto-activates from its own SessionStart hook. Level is read from
+# CAVEMAN_DEFAULT_MODE first: off | lite | full | ultra.
+ENV CAVEMAN_DEFAULT_MODE=lite
 
 # Claude settings for sandboxes. A wrapper injects via --settings, which does merge. sbx execs
 # `claude` by PATH lookup using the image ENV, so the wrapper dir goes first.
