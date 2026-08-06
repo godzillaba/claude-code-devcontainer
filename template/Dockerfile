@@ -215,7 +215,8 @@ RUN for m in \
       trailofbits/skills \
       trailofbits/skills-curated \
       godzillaba/my-plugins \
-      ast-grep/agent-skill; do \
+      ast-grep/agent-skill \
+      ayghri/i-have-adhd; do \
     claude plugin marketplace add "$m" || echo "WARN: marketplace add failed: $m" >&2; \
   done; \
   for p in \
@@ -227,14 +228,27 @@ RUN for m in \
       mutest@godzillaba-plugins \
       nitro-testnode@godzillaba-plugins \
       company-search@godzillaba-plugins \
-      ast-grep; do \
+      ast-grep \
+      i-have-adhd@i-have-adhd; do \
     claude plugin install "$p" || echo "WARN: plugin install failed: $p" >&2; \
   done
+
+# Always-on ADHD output shaping: the i-have-adhd plugin's SessionStart hook
+# injects its ruleset whenever this flag file exists.
+RUN touch /home/agent/.claude/.i-have-adhd-always
 
 # Claude settings for sandboxes. A wrapper injects via --settings, which does merge. sbx execs
 # `claude` by PATH lookup using the image ENV, so the wrapper dir goes first.
 # Placed after the plugin installs so the wrapper is inert during the build.
 COPY claude-settings.json /etc/claude-code/claude-settings.json
+# sbx overwrites ~/.claude/settings.json at sandbox creation with the host's copy,
+# wiping the enabledPlugins map the plugin installs wrote there. Carry it into the
+# wrapper-injected settings so plugins stay enabled.
+USER root
+RUN jq -s '.[0] + {enabledPlugins: (.[1].enabledPlugins // {})}' \
+      /etc/claude-code/claude-settings.json /home/agent/.claude/settings.json \
+      > /tmp/cs.json && mv /tmp/cs.json /etc/claude-code/claude-settings.json
+USER agent
 COPY claude-wrapper /opt/claude-wrapper/claude
 ENV PATH="/opt/claude-wrapper:${PATH}"
 
