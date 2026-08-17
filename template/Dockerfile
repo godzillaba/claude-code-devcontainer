@@ -196,7 +196,10 @@ COPY --chown=agent:agent CLAUDE.md /home/agent/.claude/CLAUDE.md
 COPY --chown=agent:agent hooks/ /home/agent/.claude/hooks/
 RUN chmod +x /home/agent/.claude/hooks/*.bash
 
-# Skills: pashov solidity-auditor (as a slash command) + nemesis-auditor skills
+# Skills: pashov solidity-auditor (as a slash command) + nemesis-auditor skills.
+# Both land in commands/, not skills/: sbx bind-mounts the host's
+# ~/.claude/skills over /home/agent/.claude/skills, which hides anything baked
+# there. commands/ is not mounted, so it survives.
 RUN git clone https://github.com/pashov/skills.git /tmp/pashov-skills && \
   mkdir -p /home/agent/.claude/commands && \
   cp -r /tmp/pashov-skills/solidity-auditor /home/agent/.claude/commands/solidity-auditor && \
@@ -204,8 +207,10 @@ RUN git clone https://github.com/pashov/skills.git /tmp/pashov-skills && \
 
 RUN git clone https://github.com/0xiehnnkta/nemesis-auditor.git /tmp/nemesis && \
   git -C /tmp/nemesis checkout 75cecc6 && \
-  mkdir -p /home/agent/.claude/skills && \
-  cp -r /tmp/nemesis/.claude/skills/. /home/agent/.claude/skills/ && \
+  mkdir -p /home/agent/.claude/commands && \
+  cp -r /tmp/nemesis/.claude/skills/. /home/agent/.claude/commands/ && \
+  sed -i 's#\.claude/skills/#/home/agent/.claude/commands/#g' \
+    /home/agent/.claude/commands/nemesis-auditor/SKILL.md && \
   rm -rf /tmp/nemesis
 
 # Claude Code plugins (marketplaces + plugins). Baked at build time; per-item
